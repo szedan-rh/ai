@@ -1,3 +1,4 @@
+/// Compile vendored Envoy `.proto` files into Rust types with tonic gRPC stubs.
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let cwd = std::env::current_dir()?;
     let proto_files = ["proto/envoy_common.proto", "proto/ext_proc.proto"]
@@ -15,6 +16,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let fds = protox::compile(&proto_files, &include_dirs)?;
     tonic_prost_build::configure()
+        .build_client(true)
         .build_server(true)
         .compile_fds_with_config(fds, config)?;
 
