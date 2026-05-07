@@ -294,7 +294,7 @@ checksum = "3a8241f3ebb85c056b509d4327ad0358fbbba6ffb340bf388f26350aeda225b1"
 
 [[package]]
 name = "benchmarks"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "chrono",
  "criterion",
@@ -1035,10 +1035,6 @@ name = "hashbrown"
 version = "0.14.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e5274423e17b7c9fc20b6e7e208532f9b19825d82dfd615708b70edd83df41f1"
-dependencies = [
- "ahash",
- "allocator-api2",
-]
 
 [[package]]
 name = "hashbrown"
@@ -1065,6 +1061,11 @@ name = "hashbrown"
 version = "0.17.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "4f467dd6dccf739c208452f8014c75c18bb8301b050ad1cfb27153803edb0f51"
+dependencies = [
+ "allocator-api2",
+ "equivalent",
+ "foldhash 0.2.0",
+]
 
 [[package]]
 name = "heck"
@@ -1933,7 +1934,7 @@ version = "0.8.0"
 source = "git+https://github.com/praxis-proxy/pingora.git?rev=2e452af034fb23a9cd57ec808e7d374037c0d664#2e452af034fb23a9cd57ec808e7d374037c0d664"
 dependencies = [
  "arrayvec",
- "hashbrown 0.14.5",
+ "hashbrown 0.17.0",
  "parking_lot",
  "rand 0.8.6",
 ]
@@ -2070,7 +2071,7 @@ dependencies = [
 
 [[package]]
 name = "praxis"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "clap",
  "nix",
@@ -2087,7 +2088,7 @@ dependencies = [
 
 [[package]]
 name = "praxis-proxy-core"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "dashmap",
  "pingora-core",
@@ -2102,7 +2103,7 @@ dependencies = [
 
 [[package]]
 name = "praxis-proxy-filter"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "async-trait",
  "bytes",
@@ -2124,7 +2125,7 @@ dependencies = [
 
 [[package]]
 name = "praxis-proxy-proto"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "prost",
  "prost-build",
@@ -2138,7 +2139,7 @@ dependencies = [
 
 [[package]]
 name = "praxis-proxy-protocol"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "arc-swap",
  "async-trait",
@@ -2163,7 +2164,7 @@ dependencies = [
 
 [[package]]
 name = "praxis-proxy-tls"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "arc-swap",
  "notify",
@@ -2180,7 +2181,7 @@ dependencies = [
 
 [[package]]
 name = "praxis-test-utils"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "arc-swap",
  "async-trait",
@@ -2205,7 +2206,7 @@ dependencies = [
 
 [[package]]
 name = "praxis-tests-conformance"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "h2",
  "http",
@@ -2218,7 +2219,7 @@ dependencies = [
 
 [[package]]
 name = "praxis-tests-integration"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "arc-swap",
  "async-trait",
@@ -2242,7 +2243,7 @@ dependencies = [
 
 [[package]]
 name = "praxis-tests-resilience"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "async-trait",
  "benchmarks",
@@ -2258,7 +2259,7 @@ dependencies = [
 
 [[package]]
 name = "praxis-tests-schema"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "async-trait",
  "bytes",
@@ -2273,7 +2274,7 @@ dependencies = [
 
 [[package]]
 name = "praxis-tests-security"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "praxis-proxy-core",
  "praxis-proxy-filter",
@@ -2283,7 +2284,7 @@ dependencies = [
 
 [[package]]
 name = "praxis-tests-smoke"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "praxis",
  "praxis-proxy-core",
@@ -3982,7 +3983,7 @@ dependencies = [
 
 [[package]]
 name = "xtask"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "benchmarks",
  "chrono",

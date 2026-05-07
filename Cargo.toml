@@ -27,7 +27,7 @@ members = [
 exclude = ["tests/fuzz"]
 
 [workspace.package]
-version = "0.1.0"
+version = "0.2.0"
 edition = "2024"
 rust-version = "1.94"
 authors = ["Shane Utt <shaneutt@linux.com>"]
@@ -54,7 +54,7 @@ pingora-core = { version = "0.8.0", git = "https://github.com/praxis-proxy/pingo
 pingora-http = { version = "0.8.0", git = "https://github.com/praxis-proxy/pingora.git", rev = "2e452af034fb23a9cd57ec808e7d374037c0d664" }
 pingora-proxy = { version = "0.8.0", git = "https://github.com/praxis-proxy/pingora.git", rev = "2e452af034fb23a9cd57ec808e7d374037c0d664", features = ["rustls"] }
 percent-encoding = "2.3.2"
-praxis-proto = { version = "0.1.0", path = "filter/proto", package = "praxis-proxy-proto" }
+praxis-proto = { version = "0.2.0", path = "filter/proto", package = "praxis-proxy-proto" }
 prost = "0.14.3"
 prost-build = "0.14.3"
 prost-types = "0.14.3"
@@ -62,10 +62,10 @@ prost-wkt-types = { version = "0.7.1", features = ["vendored-protox"] }
 protox = "0.9.1"
 plotters = { version = "0.3.7", default-features = false, features = ["svg_backend", "line_series"] }
 praxis = { path = "server" }
-praxis-core = { version = "0.1.0", path = "core", package = "praxis-proxy-core" }
-praxis-filter = { version = "0.1.0", path = "filter", package = "praxis-proxy-filter" }
-praxis-protocol = { version = "0.1.0", path = "protocol", package = "praxis-proxy-protocol" }
-praxis-tls = { version = "0.1.0", path = "tls", package = "praxis-proxy-tls" }
+praxis-core = { version = "0.2.0", path = "core", package = "praxis-proxy-core" }
+praxis-filter = { version = "0.2.0", path = "filter", package = "praxis-proxy-filter" }
+praxis-protocol = { version = "0.2.0", path = "protocol", package = "praxis-proxy-protocol" }
+praxis-tls = { version = "0.2.0", path = "tls", package = "praxis-proxy-tls" }
 praxis-test-utils = { path = "tests/utils" }
 serde = { version = "1.0.228", features = ["derive", "rc"] }
 serde_json = "1.0.149"
