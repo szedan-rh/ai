@@ -34,8 +34,25 @@ fn from_config_rejects_zero_rate() {
     let yaml: serde_yaml::Value = serde_yaml::from_str("mode: global\nrate: 0\nburst: 10").unwrap();
     let err = RateLimitFilter::from_config(&yaml).err().expect("should error");
     assert!(
-        err.to_string().contains("rate must be greater than 0"),
-        "should reject zero rate, got: {err}"
+        err.to_string().contains("rate must be a finite number greater than 0"),
+        "should reject zero rate: {err}"
+    );
+}
+
+#[test]
+fn from_config_rejects_nan_rate() {
+    let yaml: serde_yaml::Value = serde_yaml::from_str("mode: global\nrate: .nan\nburst: 10").unwrap();
+    let err = RateLimitFilter::from_config(&yaml).err().expect("should error");
+    assert!(err.to_string().contains("finite"), "should reject NaN rate, got: {err}");
+}
+
+#[test]
+fn from_config_rejects_infinity_rate() {
+    let yaml: serde_yaml::Value = serde_yaml::from_str("mode: global\nrate: .inf\nburst: 10").unwrap();
+    let err = RateLimitFilter::from_config(&yaml).err().expect("should error");
+    assert!(
+        err.to_string().contains("finite"),
+        "should reject infinity rate, got: {err}"
     );
 }
 
@@ -44,8 +61,8 @@ fn from_config_rejects_negative_rate() {
     let yaml: serde_yaml::Value = serde_yaml::from_str("mode: global\nrate: -5\nburst: 10").unwrap();
     let err = RateLimitFilter::from_config(&yaml).err().expect("should error");
     assert!(
-        err.to_string().contains("rate must be greater than 0"),
-        "should reject negative rate, got: {err}"
+        err.to_string().contains("rate must be a finite number greater than 0"),
+        "should reject negative rate: {err}"
     );
 }
 

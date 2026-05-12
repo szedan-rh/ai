@@ -63,10 +63,15 @@ fn check_yaml_size(raw: &str) -> Result<(), ProxyError> {
 ///
 /// [`ProxyError::Config`]: crate::errors::ProxyError::Config
 fn check_yaml_expansion(raw: &str, threshold: usize) -> Result<(), ProxyError> {
-    if let Ok(value) = serde_yaml::from_str::<serde_yaml::Value>(raw)
-        && let Ok(expanded) = serde_yaml::to_string(&value)
-        && expanded.len() > threshold
-    {
+    let Ok(value) = serde_yaml::from_str::<serde_yaml::Value>(raw) else {
+        return Ok(());
+    };
+    let Ok(expanded) = serde_yaml::to_string(&value) else {
+        return Err(ProxyError::Config(
+            "YAML alias expansion check failed: could not re-serialize parsed document".to_owned(),
+        ));
+    };
+    if expanded.len() > threshold {
         return Err(ProxyError::Config(format!(
             "YAML alias expansion too large ({} bytes expanded from {} bytes raw, \
              max {threshold})",

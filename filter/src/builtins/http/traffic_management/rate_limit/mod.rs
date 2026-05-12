@@ -150,8 +150,8 @@ impl RateLimitFilter {
     pub fn from_config(config: &serde_yaml::Value) -> Result<Box<dyn HttpFilter>, FilterError> {
         let cfg: RateLimitConfig = parse_filter_config("rate_limit", config)?;
 
-        if cfg.rate <= 0.0 {
-            return Err("rate_limit: rate must be greater than 0".into());
+        if !cfg.rate.is_finite() || cfg.rate <= 0.0 {
+            return Err("rate_limit: rate must be a finite number greater than 0".into());
         }
         if cfg.burst == 0 {
             return Err("rate_limit: burst must be at least 1".into());

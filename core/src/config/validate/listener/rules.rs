@@ -58,6 +58,9 @@ fn validate_unique_addresses(listeners: &[Listener]) -> Result<(), ProxyError> {
 
 /// Validate a single listener: address, protocol constraints, TLS, timeouts, and limits.
 fn validate_single_listener(listener: &mut Listener) -> Result<(), ProxyError> {
+    if listener.name.is_empty() {
+        return Err(ProxyError::Config("listener name must not be empty".into()));
+    }
     super::address::validate_address(&listener.address, &listener.name)?;
     validate_max_connections(listener)?;
 

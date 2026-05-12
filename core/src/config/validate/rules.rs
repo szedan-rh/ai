@@ -57,6 +57,7 @@ impl Config {
         validate_cluster_names(&self.clusters)?;
         validate_clusters(&self.clusters, &self.insecure_options)?;
         validate_upstream_ca_file(self.runtime.upstream_ca_file.as_deref())?;
+        validate_runtime_threads(self.runtime.threads)?;
 
         Ok(())
     }
@@ -122,6 +123,23 @@ fn validate_upstream_ca_file(ca_file: Option<&str>) -> Result<(), ProxyError> {
         return Err(ProxyError::Config(format!("upstream_ca_file does not exist: {path}")));
     }
 
+    Ok(())
+}
+
+// -----------------------------------------------------------------------------
+// Runtime Validation
+// -----------------------------------------------------------------------------
+
+/// Maximum allowed worker threads per service.
+const MAX_THREADS: usize = 1_024;
+
+/// Reject unreasonable thread counts.
+fn validate_runtime_threads(threads: usize) -> Result<(), ProxyError> {
+    if threads > MAX_THREADS {
+        return Err(ProxyError::Config(format!(
+            "runtime.threads must be <= {MAX_THREADS}, got {threads}"
+        )));
+    }
     Ok(())
 }
 
@@ -358,6 +376,66 @@ clusters:
             err.to_string().contains("duplicate cluster name 'backend'"),
             "should reject duplicate cluster names: {err}"
         );
+    }
+
+    #[test]
+    fn reject_empty_listener_name() {
+        let yaml = r#"
+listeners:
+  - name: ""
+    address: "0.0.0.0:8080"
+    filter_chains: [main]
+filter_chains:
+  - name: main
+    filters:
+      - filter: static_response
+        status: 200
+"#;
+        let err = Config::from_yaml(yaml).unwrap_err();
+        assert!(
+            err.to_string().contains("name must not be empty"),
+            "should reject empty listener name: {err}"
+        );
+    }
+
+    #[test]
+    fn reject_excessive_threads() {
+        let yaml = r#"
+listeners:
+  - name: web
+    address: "0.0.0.0:8080"
+    filter_chains: [main]
+runtime:
+  threads: 10000
+filter_chains:
+  - name: main
+    filters:
+      - filter: static_response
+        status: 200
+"#;
+        let err = Config::from_yaml(yaml).unwrap_err();
+        assert!(
+            err.to_string().contains("threads must be <= 1024"),
+            "should reject excessive threads: {err}"
+        );
+    }
+
+    #[test]
+    fn accept_valid_threads() {
+        let yaml = r#"
+listeners:
+  - name: web
+    address: "0.0.0.0:8080"
+    filter_chains: [main]
+runtime:
+  threads: 16
+filter_chains:
+  - name: main
+    filters:
+      - filter: static_response
+        status: 200
+"#;
+        Config::from_yaml(yaml).unwrap();
     }
 
     #[test]
