@@ -40,6 +40,7 @@
 mod a2a;
 mod agentic_mocks;
 mod anthropic_messages;
+mod conversations_rehydrate;
 mod examples;
 mod failure_mode;
 mod guardrails;
@@ -49,3 +50,4 @@ mod openai_responses_format;
 mod openai_responses_model_rewrite;
 mod prompt_enrich;
 mod responses_routing;
+mod tool_parse;
