@@ -41,7 +41,7 @@ use self::config::{AnthropicMessagesFormatConfig, build_config};
 use crate::{
     anthropic::wire,
     classifier::{AiRequestFormat, ClassifiedRequest, classify_request_body},
-    promotion::is_promotable_value,
+    promotion::{is_promotable_value, strip_promoted_headers},
 };
 
 // -----------------------------------------------------------------------------
@@ -57,6 +57,9 @@ const ANTHROPIC_VERSION_HEADER: &str = "anthropic-version";
 
 /// Classifies Anthropic Messages API requests and promotes routing
 /// facts to headers, metadata, and filter results.
+/// Client-supplied copies of the configured header names are always
+/// removed at end-of-stream, whether or not the body carries the fact, so a
+/// caller cannot pre-set a promoted header (praxis-proxy/ai#418).
 ///
 /// # YAML
 ///
@@ -122,6 +125,8 @@ impl HttpFilter for AnthropicMessagesFormatFilter {
         if !end_of_stream {
             return Ok(FilterAction::Continue);
         }
+
+        strip_promotion_targets(ctx, &self.config);
 
         let bytes = match body.as_ref() {
             Some(b) => b.as_ref(),
@@ -233,6 +238,23 @@ fn write_metadata(ctx: &mut HttpFilterContext<'_>, classified: &ClassifiedReques
     if classified.has_tools {
         ctx.set_metadata("anthropic_messages_format.has_tools", "true");
     }
+}
+
+/// Queue removal of every configured promotion header.
+///
+/// Runs at end-of-stream before the body is parsed so a client copy never
+/// survives, whether or not the body carries the fact (praxis-proxy/ai#418).
+fn strip_promotion_targets(ctx: &mut HttpFilterContext<'_>, config: &AnthropicMessagesFormatConfig) {
+    strip_promoted_headers(
+        [
+            config.headers.format.as_deref(),
+            config.headers.model.as_deref(),
+            config.headers.stream.as_deref(),
+        ]
+        .into_iter()
+        .flatten(),
+        &mut ctx.request_headers_to_remove,
+    );
 }
 
 /// Promote classification facts to configurable request headers.

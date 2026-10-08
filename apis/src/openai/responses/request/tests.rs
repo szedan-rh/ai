@@ -849,3 +849,30 @@ async fn a_create_without_a_conversation_does_not_arm_append_back() {
         "no conversation selector means no local append-back"
     );
 }
+
+
+#[tokio::test]
+async fn client_supplied_custom_headers_are_stripped_when_body_omits_the_fact() {
+    // praxis-proxy/ai#418: a client copy of an operator-chosen promotion
+    // header must not survive into routing when the body omits the fact.
+    let filter = filter("headers:\n  model: x-route-model");
+    let mut request = create_request();
+    request
+        .headers
+        .insert("x-route-model", http::HeaderValue::from_static("privileged-model"));
+    let mut ctx = make_filter_context(&request);
+    let mut body = Some(Bytes::from(serde_json::to_vec(&json!({"input": "hi"})).unwrap()));
+
+    let _action = filter.on_request_body(&mut ctx, &mut body, true).await.unwrap();
+
+    assert!(
+        ctx.request_headers_to_remove.iter().any(|h| h == "x-route-model"),
+        "the configured model header must be queued for removal"
+    );
+    assert!(
+        !ctx.extra_request_headers
+            .iter()
+            .any(|(name, _)| name == "x-route-model"),
+        "no model is promoted when the body omits it"
+    );
+}

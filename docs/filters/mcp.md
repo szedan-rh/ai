@@ -3,7 +3,7 @@
 
 # `mcp`
 
-Extracts MCP protocol metadata from JSON-RPC request bodies and promotes method, tool/resource/prompt name, JSON-RPC kind, protocol version, and session presence to request headers/filter results; stores session ID in durable metadata.
+Extracts MCP protocol metadata from JSON-RPC request bodies and promotes method, tool/resource/prompt name, JSON-RPC kind, protocol version, and session presence to request headers/filter results; stores session ID in durable metadata. Client-supplied copies of the configured header names are always removed at end-of-stream, whether or not the body carries the fact, so a caller cannot pre-set a promoted header (praxis-proxy/ai#418).
 
 MCP static catalog filter that aggregates tool catalogs from multiple backend MCP servers and handles `tools/list`, `tools/call`, and current-profile broker methods (`initialize`, `ping`, and `notifications/initialized`).
 

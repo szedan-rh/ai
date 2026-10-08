@@ -1275,6 +1275,32 @@ async fn null_protocol_version_header_skips_header_promotion() {
 }
 
 // -----------------------------------------------------------------------------
+// Client-supplied promotion headers (praxis-proxy/ai#418)
+// -----------------------------------------------------------------------------
+
+#[tokio::test]
+async fn client_supplied_custom_headers_are_stripped_when_envelope_omits_the_fact() {
+    let filter = make_filter("headers:\n  name: x-route-tool\n  protocol_version: x-route-protocol");
+    let body_str = r#"{"jsonrpc":"2.0","id":1,"method":"initialize","params":{}}"#;
+    let req = make_mcp_request(&[("x-route-tool", "privileged_tool")]);
+    let mut ctx = crate::test_utils::make_filter_context(&req);
+    let mut body = Some(Bytes::from(body_str));
+
+    let _action = filter.on_request_body(&mut ctx, &mut body, true).await.unwrap();
+
+    for name in ["x-route-tool", "x-route-protocol"] {
+        assert!(
+            ctx.request_headers_to_remove.iter().any(|h| h == name),
+            "{name} must be queued for removal before promotion"
+        );
+    }
+    assert!(
+        !ctx.extra_request_headers.iter().any(|(name, _)| name == "x-route-tool"),
+        "no tool name is promoted when the envelope omits it"
+    );
+}
+
+// -----------------------------------------------------------------------------
 // Test Utilities
 // -----------------------------------------------------------------------------
 

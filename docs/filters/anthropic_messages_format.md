@@ -3,7 +3,7 @@
 
 # `anthropic_messages_format`
 
-Classifies Anthropic Messages API requests and promotes routing facts to headers, metadata, and filter results.
+Classifies Anthropic Messages API requests and promotes routing facts to headers, metadata, and filter results. Client-supplied copies of the configured header names are always removed at end-of-stream, whether or not the body carries the fact, so a caller cannot pre-set a promoted header (praxis-proxy/ai#418).
 
 ## Configuration
 

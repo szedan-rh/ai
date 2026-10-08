@@ -437,6 +437,39 @@ async fn on_request_body_rejects_malformed_json() {
 }
 
 // -----------------------------------------------------------------------------
+// Client-supplied promotion headers (praxis-proxy/ai#418)
+// -----------------------------------------------------------------------------
+
+#[tokio::test]
+async fn client_supplied_custom_headers_are_stripped_when_body_omits_the_fact() {
+    let filter = make_filter("headers:\n  format: x-route-format\n  model: x-route-model\n  stream: x-route-stream");
+    let mut req = crate::test_utils::make_request(http::Method::POST, "/v1/messages");
+    req.headers
+        .insert("x-route-model", http::HeaderValue::from_static("privileged-model"));
+    req.headers
+        .insert("x-route-stream", http::HeaderValue::from_static("true"));
+    let mut ctx = crate::test_utils::make_filter_context(&req);
+    let mut body = Some(Bytes::from_static(
+        br#"{"max_tokens":16,"messages":[{"role":"user","content":"Hi"}]}"#,
+    ));
+
+    let _action = filter.on_request_body(&mut ctx, &mut body, true).await.unwrap();
+
+    for name in ["x-route-format", "x-route-model", "x-route-stream"] {
+        assert!(
+            ctx.request_headers_to_remove.iter().any(|h| h == name),
+            "{name} must be queued for removal before promotion"
+        );
+    }
+    let headers = collect_headers(&ctx);
+    assert!(
+        !headers.contains_key("x-route-model") && !headers.contains_key("x-route-stream"),
+        "nothing is promoted for facts the body omits: {headers:?}"
+    );
+    assert_eq!(headers.get("x-route-format"), Some(&"anthropic_messages"));
+}
+
+// -----------------------------------------------------------------------------
 // Test Utilities
 // -----------------------------------------------------------------------------
 

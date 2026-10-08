@@ -1216,6 +1216,58 @@ async fn on_request_skips_repopulation_when_no_metadata() {
 }
 
 // -----------------------------------------------------------------------------
+// Client-supplied promotion headers (praxis-proxy/ai#418)
+// -----------------------------------------------------------------------------
+
+#[tokio::test]
+async fn client_supplied_custom_headers_are_stripped_when_no_model_is_rewritten() {
+    let filter = make_filter(
+        "model_aliases:\n  fast: gpt-4o-mini\nheaders:\n  effective_model: x-custom-eff\n  original_model: x-custom-orig",
+    );
+    let mut req = crate::test_utils::make_request(http::Method::POST, "/v1/responses");
+    req.headers
+        .insert("x-custom-orig", http::HeaderValue::from_static("privileged-model"));
+    let mut ctx = crate::test_utils::make_filter_context(&req);
+    let mut body = Some(Bytes::from_static(br#"{"input":"test"}"#));
+
+    let _action = filter.on_request_body(&mut ctx, &mut body, true).await.unwrap();
+
+    for name in ["x-custom-eff", "x-custom-orig"] {
+        assert!(
+            ctx.request_headers_to_remove.iter().any(|h| h == name),
+            "{name} must be queued for removal before promotion"
+        );
+    }
+    assert!(
+        !collect_headers(&ctx).contains_key("x-custom-orig"),
+        "no original model is promoted when the body carries none"
+    );
+}
+
+#[tokio::test]
+async fn client_supplied_custom_headers_are_stripped_on_non_create_paths() {
+    let filter = make_filter(
+        "model_aliases:\n  fast: gpt-4o-mini\nheaders:\n  effective_model: x-custom-eff\n  original_model: x-custom-orig",
+    );
+    let mut req = crate::test_utils::make_request(http::Method::GET, "/v1/responses/resp_1");
+    req.headers
+        .insert("x-custom-eff", http::HeaderValue::from_static("privileged-model"));
+    let mut ctx = crate::test_utils::make_filter_context(&req);
+    let mut body = Some(Bytes::new());
+
+    let _action = filter.on_request_body(&mut ctx, &mut body, true).await.unwrap();
+
+    assert!(
+        ctx.request_headers_to_remove.iter().any(|h| h == "x-custom-eff"),
+        "model-identity headers are owned by the filter on every path"
+    );
+    assert!(
+        ctx.extra_request_headers.is_empty(),
+        "nothing is promoted off the create paths"
+    );
+}
+
+// -----------------------------------------------------------------------------
 // Test Utilities
 // -----------------------------------------------------------------------------
 

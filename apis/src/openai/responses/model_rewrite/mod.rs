@@ -62,7 +62,7 @@ use super::error::responses_error_rejection;
 use crate::{
     classifier::{is_chat_completions_create, is_responses_create},
     json_body::replace_json_body,
-    promotion::is_promotable_value,
+    promotion::{is_promotable_value, strip_promoted_headers},
 };
 
 // -----------------------------------------------------------------------------
@@ -81,6 +81,10 @@ use crate::{
 ///   "gpt-4.1-*": "qwen-2.5-72b"
 ///   "gpt-4.1-mini": "qwen-2.5-72b"
 /// ```
+///
+/// Client-supplied copies of the configured header names are always
+/// removed at end-of-stream, whether or not the body carries the fact, so a
+/// caller cannot pre-set a promoted header (praxis-proxy/ai#418).
 ///
 /// # Full YAML
 ///
@@ -196,6 +200,18 @@ impl HttpFilter for ModelRewriteFilter {
         if !end_of_stream {
             return Ok(FilterAction::Continue);
         }
+
+        // A client copy of a model-identity header never survives, on any
+        // path and whether or not a rewrite happens (praxis-proxy/ai#418).
+        strip_promoted_headers(
+            [
+                self.headers.effective_model.as_deref(),
+                self.headers.original_model.as_deref(),
+            ]
+            .into_iter()
+            .flatten(),
+            &mut ctx.request_headers_to_remove,
+        );
 
         let path = ctx.request.uri.path();
         if !is_responses_create(&ctx.request.method, path) && !is_chat_completions_create(&ctx.request.method, path) {

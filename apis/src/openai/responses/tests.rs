@@ -1036,6 +1036,35 @@ async fn mode_header_suppressed_when_null() {
 }
 
 // -----------------------------------------------------------------------------
+// Client-supplied promotion headers (praxis-proxy/ai#418)
+// -----------------------------------------------------------------------------
+
+#[tokio::test]
+async fn client_supplied_custom_headers_are_stripped_when_body_omits_the_fact() {
+    let filter = make_filter(
+        "headers:\n  format: x-route-format\n  model: x-route-model\n  stream: x-route-stream\n  mode: x-route-mode",
+    );
+    let mut req = crate::test_utils::make_request(http::Method::POST, "/v1/responses");
+    req.headers
+        .insert("x-route-model", http::HeaderValue::from_static("privileged-model"));
+    let mut ctx = crate::test_utils::make_filter_context(&req);
+    let mut body = Some(Bytes::from_static(br#"{"input":"hi"}"#));
+
+    let _action = filter.on_request_body(&mut ctx, &mut body, true).await.unwrap();
+
+    for name in ["x-route-format", "x-route-model", "x-route-stream", "x-route-mode"] {
+        assert!(
+            ctx.request_headers_to_remove.iter().any(|h| h == name),
+            "{name} must be queued for removal before promotion"
+        );
+    }
+    assert!(
+        !collect_headers(&ctx).contains_key("x-route-model"),
+        "no model is promoted when the body omits it"
+    );
+}
+
+// -----------------------------------------------------------------------------
 // Test Utilities
 // -----------------------------------------------------------------------------
 

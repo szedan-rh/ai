@@ -3,7 +3,7 @@
 
 # `a2a`
 
-Extracts A2A protocol metadata from JSON-RPC request bodies and promotes method, family, task ID, streaming detection, and version to request headers, filter results, and durable metadata for routing.
+Extracts A2A protocol metadata from JSON-RPC request bodies and promotes method, family, task ID, streaming detection, and version to request headers, filter results, and durable metadata for routing. Client-supplied copies of the configured header names are always removed at end-of-stream, whether or not the body carries the fact, so a caller cannot pre-set a promoted header (praxis-proxy/ai#418).
 
 ## Configuration Notes
 

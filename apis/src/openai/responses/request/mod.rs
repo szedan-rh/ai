@@ -69,6 +69,10 @@ const FILTER_NAME: &str = "openai_responses_request";
 /// Configuration matches `openai_responses_format`, so a chain keeps the same
 /// `on_invalid` and `headers` settings wherever this filter is placed.
 ///
+/// Client-supplied copies of the configured header names are always
+/// removed at end-of-stream, whether or not the body carries the fact, so a
+/// caller cannot pre-set a promoted header (praxis-proxy/ai#418).
+///
 /// The operation is recognized from the request head, and the registry decides
 /// which operations carry a body worth parsing: create, compact, and input
 /// token counts. Bodyless operations — fetch, delete, cancel, list input items,
@@ -162,12 +166,10 @@ impl HttpFilter for OpenaiResponsesRequestFilter {
             return Ok(FilterAction::Continue);
         }
 
+        super::strip_promotion_targets(ctx, &self.config.shared);
+
         let Some(matched) = matched_body_bearing_operation(ctx) else {
-            trace!(
-                method = %ctx.request.method,
-                path = ctx.request.uri.path(),
-                "not a body-bearing Responses operation"
-            );
+            trace!(method = %ctx.request.method, path = ctx.request.uri.path(), "not a body-bearing Responses operation");
             return Ok(FilterAction::Release);
         };
 

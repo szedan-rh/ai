@@ -26,7 +26,10 @@ use std::{borrow::Cow, fmt::Write as _, sync::Arc};
 
 use async_trait::async_trait;
 use bytes::Bytes;
-use praxis_ai_apis::{is_event_stream_content_type, promotion::contains_control_chars};
+use praxis_ai_apis::{
+    is_event_stream_content_type,
+    promotion::{contains_control_chars, strip_promoted_headers},
+};
 use praxis_filter::{
     BodyAccess, BodyMode, FilterAction, FilterError, HttpFilter, HttpFilterContext,
     builtins::http::payload_processing::{MAX_DYNAMIC_VALUE_LEN, OnInvalidBehavior, json_rpc::config::JsonRpcConfig},
@@ -47,6 +50,9 @@ use self::{
 /// Extracts A2A protocol metadata from JSON-RPC request bodies and promotes
 /// method, family, task ID, streaming detection, and version to request headers,
 /// filter results, and durable metadata for routing.
+/// Client-supplied copies of the configured header names are always
+/// removed at end-of-stream, whether or not the body carries the fact, so a
+/// caller cannot pre-set a promoted header (praxis-proxy/ai#418).
 ///
 /// When `task_routing.enabled` is true, the filter captures task and context
 /// ownership from backend responses and uses it to route follow-up requests.
@@ -172,6 +178,25 @@ impl HttpFilter for A2aFilter {
         body: &mut Option<Bytes>,
         end_of_stream: bool,
     ) -> Result<FilterAction, FilterError> {
+        if end_of_stream {
+            // A client copy of a promoted header never survives, whether or
+            // not the envelope carries the fact (praxis-proxy/ai#418).
+            strip_promoted_headers(
+                [
+                    self.config.headers.method.as_deref(),
+                    self.config.headers.family.as_deref(),
+                    self.config.headers.context_id.as_deref(),
+                    self.config.headers.task_id.as_deref(),
+                    self.config.headers.kind.as_deref(),
+                    self.config.headers.streaming.as_deref(),
+                    self.config.headers.version.as_deref(),
+                    Some(self.config.task_routing.route_cluster_header.as_str()),
+                ]
+                .into_iter()
+                .flatten(),
+                &mut ctx.request_headers_to_remove,
+            );
+        }
         let parsed = match praxis_filter::builtins::http::payload_processing::body_parsing::parse_json_rpc_body(
             body.as_ref(),
             end_of_stream,

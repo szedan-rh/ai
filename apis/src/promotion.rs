@@ -31,6 +31,28 @@ pub fn contains_control_chars(s: &str) -> bool {
 }
 
 // -----------------------------------------------------------------------------
+// strip_promoted_headers
+// -----------------------------------------------------------------------------
+
+/// Queue removal of every configured promotion header.
+///
+/// The pipeline applies queued removals before appended promotions, so
+/// calling this at end-of-stream, before the body is parsed, guarantees a
+/// client-supplied copy of a promoted header never survives — including when
+/// the body omits the fact and nothing is promoted (praxis-proxy/ai#418).
+/// Names that are not valid header names are skipped; configuration
+/// validation already rejects them.
+pub fn strip_promoted_headers<S: AsRef<str>>(names: impl IntoIterator<Item = S>, remove: &mut Vec<HeaderName>) {
+    for name in names {
+        if let Ok(header) = HeaderName::from_bytes(name.as_ref().as_bytes())
+            && !remove.contains(&header)
+        {
+            remove.push(header);
+        }
+    }
+}
+
+// -----------------------------------------------------------------------------
 // is_promotable_value
 // -----------------------------------------------------------------------------
 

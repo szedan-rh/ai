@@ -3453,6 +3453,34 @@ fn scan_json_balance_persists_across_chunk_calls() {
 }
 
 // -----------------------------------------------------------------------------
+// Client-supplied promotion headers (praxis-proxy/ai#418)
+// -----------------------------------------------------------------------------
+
+#[tokio::test]
+async fn client_supplied_custom_headers_are_stripped_when_envelope_omits_the_fact() {
+    let filter = make_filter("headers:\n  context_id: x-route-context\n  task_id: x-route-task");
+    let body_str = r#"{"jsonrpc":"2.0","id":1,"method":"SendMessage","params":{"message":{"role":"user","parts":[]}}}"#;
+    let req = make_a2a_request(&[("x-route-context", "ctx-privileged")]);
+    let mut ctx = crate::test_utils::make_filter_context(&req);
+    let mut body = Some(Bytes::from(body_str));
+
+    let _action = filter.on_request_body(&mut ctx, &mut body, true).await.unwrap();
+
+    for name in ["x-route-context", "x-route-task", "x-praxis-a2a-route-cluster"] {
+        assert!(
+            ctx.request_headers_to_remove.iter().any(|h| h == name),
+            "{name} must be queued for removal before promotion"
+        );
+    }
+    assert!(
+        !ctx.extra_request_headers
+            .iter()
+            .any(|(name, _)| name == "x-route-context"),
+        "no context id is promoted when the envelope omits it"
+    );
+}
+
+// -----------------------------------------------------------------------------
 // Test Utilities
 // -----------------------------------------------------------------------------
 

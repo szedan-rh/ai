@@ -15,7 +15,7 @@ see the [Praxis core filter reference][core-ref].
 
 | Filter | Description |
 |--------|-------------|
-| [`anthropic_messages_format`](anthropic_messages_format.md) | Classifies Anthropic Messages API requests and promotes routing facts to headers, metadata, and filter results. |
+| [`anthropic_messages_format`](anthropic_messages_format.md) | Classifies Anthropic Messages API requests and promotes routing facts to headers, metadata, and filter results. Client-supplied copies of the configured header names are always removed at end-of-stream, whether or not the body carries the fact, so a caller cannot pre-set a promoted header (praxis-proxy/ai#418). |
 | [`anthropic_messages_protocol`](anthropic_messages_protocol.md) | Normalizes Anthropic Messages protocol headers for native backends. |
 | [`anthropic_messages_to_chat_completions`](anthropic_messages_to_chat_completions.md) | Transforms Anthropic Messages API requests to Chat Completions-compatible request bodies and transforms compatible responses back. The name refers to the Chat Completions wire shape, not the OpenAI Responses API; any Chat Completions-compatible backend is a valid target, not only OpenAI. |
 | [`anthropic_messages_to_chat_completions_stream`](anthropic_messages_to_chat_completions_stream.md) | Transforms streaming SSE responses between the Chat Completions and Anthropic Messages formats, processing each chunk as it arrives. |
@@ -50,7 +50,7 @@ see the [Praxis core filter reference][core-ref].
 | [`openai_mcp_tool_resolve`](openai_mcp_tool_resolve.md) | Resolves MCP tool entries from the Responses API `tools` array into concrete tool definitions by calling `tools/list` on each upstream MCP server. |
 | [`openai_response_store`](openai_response_store.md) | Persists Responses API responses to the configured response store backend. |
 | [`openai_responses_compact`](openai_responses_compact.md) | Summarizes conversation history when the token count exceeds a configured threshold. |
-| [`openai_responses_format`](openai_responses_format.md) | Classifies AI API request bodies and promotes routing facts to headers, metadata, and filter results without mutating the body. |
+| [`openai_responses_format`](openai_responses_format.md) | Classifies AI API request bodies and promotes routing facts to headers, metadata, and filter results without mutating the body. Client-supplied copies of the configured header names are always removed at end-of-stream, whether or not the body carries the fact, so a caller cannot pre-set a promoted header (praxis-proxy/ai#418). |
 | [`openai_responses_model_rewrite`](openai_responses_model_rewrite.md) | Rewrites the `model` field in Responses and Chat Completions request bodies. |
 | [`openai_responses_proxy`](openai_responses_proxy.md) | Rebuilds the request body from `ResponsesState` when present. |
 | [`openai_responses_rehydrate`](openai_responses_rehydrate.md) | Validates `previous_response_id` by fetching the stored response, confirming its status is `"completed"`, and populating `ResponsesState` with the full conversation history (stored turns + current input). |
@@ -78,8 +78,8 @@ see the [Praxis core filter reference][core-ref].
 
 | Filter | Description |
 |--------|-------------|
-| [`a2a`](a2a.md) | Extracts A2A protocol metadata from JSON-RPC request bodies and promotes method, family, task ID, streaming detection, and version to request headers, filter results, and durable metadata for routing. |
-| [`mcp`](mcp.md) | Extracts MCP protocol metadata from JSON-RPC request bodies and promotes method, tool/resource/prompt name, JSON-RPC kind, protocol version, and session presence to request headers/filter results; stores session ID in durable metadata. |
+| [`a2a`](a2a.md) | Extracts A2A protocol metadata from JSON-RPC request bodies and promotes method, family, task ID, streaming detection, and version to request headers, filter results, and durable metadata for routing. Client-supplied copies of the configured header names are always removed at end-of-stream, whether or not the body carries the fact, so a caller cannot pre-set a promoted header (praxis-proxy/ai#418). |
+| [`mcp`](mcp.md) | Extracts MCP protocol metadata from JSON-RPC request bodies and promotes method, tool/resource/prompt name, JSON-RPC kind, protocol version, and session presence to request headers/filter results; stores session ID in durable metadata. Client-supplied copies of the configured header names are always removed at end-of-stream, whether or not the body carries the fact, so a caller cannot pre-set a promoted header (praxis-proxy/ai#418). |
 
 ### AWS
 
